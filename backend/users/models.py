@@ -2,16 +2,17 @@ from django.conf import settings
 from django.contrib.auth.models import AbstractUser
 from django.core.validators import MinLengthValidator, RegexValidator
 from django.db import models
+from django.utils.translation import gettext_lazy as _
 
 
 class User(AbstractUser):
     email = models.EmailField(
-        verbose_name='Адрес почты',
+        _('Адрес почты'),
         max_length=settings.MAX_LEN_EMAIL_PWRD_FIELD,
         unique=True,
     )
     username = models.CharField(
-        verbose_name='Имя пользователя',
+        _('Имя пользователя'),
         max_length=settings.MAX_LEN_USER_CHARFIELD,
         unique=True,
         validators=[MinLengthValidator
@@ -19,7 +20,7 @@ class User(AbstractUser):
                     ],
     )
     first_name = models.CharField(
-        verbose_name='Имя',
+        _('Имя'),
         max_length=settings.MAX_LEN_USER_CHARFIELD,
         validators=[RegexValidator(
             regex='^[a-zA-Zа-яА-ЯёЁ -]*$',
@@ -27,7 +28,7 @@ class User(AbstractUser):
         )],
     )
     last_name = models.CharField(
-        verbose_name='Фамилия',
+        _('Фамилия'),
         max_length=settings.MAX_LEN_USER_CHARFIELD,
         validators=[RegexValidator(
             regex='^[a-zA-Zа-яА-ЯёЁ -]*$',
@@ -35,13 +36,13 @@ class User(AbstractUser):
         )],
     )
     password = models.CharField(
-        verbose_name='Пароль',
+        _('Пароль'),
         max_length=settings.MAX_LEN_EMAIL_PWRD_FIELD,
     )
 
     class Meta:
-        verbose_name = 'Пользователь'
-        verbose_name_plural = 'Пользователи'
+        verbose_name = _('Пользователь')
+        verbose_name_plural = _('Пользователи')
         ordering = ('username',)
 
     def __str__(self):
@@ -55,6 +56,7 @@ class User(AbstractUser):
             return email_name.lower() + "@" + domain_part.lower()
         return email
 
+    @staticmethod
     def __normalize_first_last_names(self, name):
         return name.strip().title()
 
@@ -69,13 +71,13 @@ class Follow(models.Model):
         User,
         on_delete=models.CASCADE,
         related_name='follower',
-        verbose_name='Автор',
+        verbose_name=_('Автор'),
     )
     user = models.ForeignKey(
         User,
         on_delete=models.CASCADE,
         related_name="followers",
-        verbose_name='Подписчики',
+        verbose_name=_('Подписчики'),
     )
     created_at = models.DateTimeField(
         verbose_name='Дата создания подписки',
@@ -89,11 +91,11 @@ class Follow(models.Model):
         constraints = [
             models.UniqueConstraint(
                 fields=('user', 'author'),
-                name='\nНельзя повторно подписаться\n',
+                name='Нельзя повторно подписаться',
             ),
             models.CheckConstraint(
                 check=~models.Q(user=models.F('author')),
-                name='\nНельзя подписываться на самого себя\n'
+                name='Нельзя подписываться на самого себя'
             ),
         ]
 
