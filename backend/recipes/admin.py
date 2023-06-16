@@ -5,24 +5,20 @@ from .models import (CartRecipeModel, Favorites, Ingredient, Recipe,
                      RecipeIngredient, Tag)
 
 
-@admin.register(CartRecipeModel)
 class CartRecipeModelAdmin(admin.ModelAdmin):
     list_display = ('user', 'recipe',)
 
 
-@admin.register(Favorites)
 class FavoritesAdmin(admin.ModelAdmin):
     list_display = ('user', 'recipe',)
 
 
-@admin.register(Ingredient)
-class IngredientAdmins(admin.ModelAdmin):
+class IngredientAdmin(admin.ModelAdmin):
     list_display = ('name', 'measurement_unit',)
     list_filter = ('name',)
     search_fields = ('name',)
 
 
-@admin.register(Recipe)
 class RecipeAdmin(admin.ModelAdmin):
     list_display = ('name', 'author', 'cooking_time', 'favorites_add',)
     search_fields = ('name', 'author', 'tags')
@@ -33,13 +29,19 @@ class RecipeAdmin(admin.ModelAdmin):
         return obj.favorites.count()
 
 
-@admin.register(RecipeIngredient)
 class RecipeIngredientAdmin(admin.ModelAdmin):
     list_display = ('ingredient', 'recipe', 'amount',)
 
 
-@admin.register(Tag)
 class TagAdmin(admin.ModelAdmin):
     list_display = ('name', 'color', 'slug',)
     search_fields = ('name', 'slug')
     list_filter = ('name', )
+
+
+admin.site.register(CartRecipeModel, CartRecipeModelAdmin)
+admin.site.register(Favorites, FavoritesAdmin)
+admin.site.register(Ingredient, IngredientAdmin)
+admin.site.register(Recipe, RecipeAdmin)
+admin.site.register(RecipeIngredient, RecipeIngredientAdmin)
+admin.site.register(Tag, TagAdmin)
