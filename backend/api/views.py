@@ -51,7 +51,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
     def list_action(self, request, pk=None, model=None):
         if request.method == 'GET':
             return self.add_to_list(model, request.user, pk)
-        elif request.method == 'DELETE':
+        if request.method == 'DELETE':
             return self.remove_from_list(model, request.user, pk)
         return None
 
@@ -65,7 +65,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
     def shopping_cart(self, request, pk=None):
         return self.list_action(request, pk=pk, model=CartRecipeModel)
 
-    def construct_shopping_list(user, ingredients):
+    def construct_shopping_list(self, user, ingredients):
         today = timezone.now().date()
         shopping_list = (f'Список покупок для: {user.get_full_name()}\n\n'
                          f'Дата: {today:%Y-%m-%d}\n\n')

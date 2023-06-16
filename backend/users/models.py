@@ -52,7 +52,7 @@ class User(AbstractUser):
         email = email or ""
         if "@" in email:
             email_name, domain_part = email.strip().rsplit("@", 1)
-            email = email_name.lower() + "@" + domain_part.lower()
+            return email_name.lower() + "@" + domain_part.lower()
         return email
 
     def __normalize_first_last_names(self, name):
