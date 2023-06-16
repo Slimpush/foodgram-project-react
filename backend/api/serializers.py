@@ -1,15 +1,14 @@
-from rest_framework.serializers import (ModelSerializer,
-                                        PrimaryKeyRelatedField,
-                                        ReadOnlyField, SerializerMethodField)
-from djoser.serializers import UserCreateSerializer, UserSerializer
-from recipes.models import Recipe, RecipeIngredient, Tag, Ingredient
-from users.models import Follow
-from rest_framework.exceptions import ValidationError
-from django.shortcuts import get_object_or_404
-from rest_framework import status
-from drf_extra_fields.fields import Base64ImageField
 from django.db import transaction
-from users.models import User
+from django.shortcuts import get_object_or_404
+from djoser.serializers import UserCreateSerializer, UserSerializer
+from drf_extra_fields.fields import Base64ImageField
+from recipes.models import Ingredient, Recipe, RecipeIngredient, Tag
+from rest_framework import status
+from rest_framework.exceptions import ValidationError
+from rest_framework.serializers import (ModelSerializer,
+                                        PrimaryKeyRelatedField, ReadOnlyField,
+                                        SerializerMethodField)
+from users.models import Follow, User
 
 
 class UserSerializer(UserSerializer):
