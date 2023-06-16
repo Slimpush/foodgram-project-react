@@ -24,7 +24,7 @@ class RecipeAdmin(admin.ModelAdmin):
     search_fields = ('name', 'author', 'tags')
     list_filter = ('author', 'name', 'tags',)
 
-    @display(description='Количество рецептов в избранных')
+    @display(description='Количество рецептов в избранном')
     def count_favorites(self, obj):
         return obj.favorites.count()
 
