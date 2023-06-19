@@ -5,13 +5,6 @@ from users.models import User
 
 @register(User)
 class UserAdmin(UserAdmin):
-    fields = (
-        'is_active',
-        'username',
-        'email',
-        'first_name',
-        'last_name',
-    )
     list_display = (
         'is_active',
         'username',

@@ -20,7 +20,7 @@ class IngredientAdmin(admin.ModelAdmin):
 
 
 class RecipeAdmin(admin.ModelAdmin):
-    list_display = ('name', 'author', 'cooking_time', 'favorites_add',)
+    list_display = ('name', 'author', 'cooking_time', 'count_favorites',)
     search_fields = ('name', 'author', 'tags')
     list_filter = ('author', 'name', 'tags',)
 

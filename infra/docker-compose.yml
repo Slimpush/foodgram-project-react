@@ -12,6 +12,7 @@ services:
       - pg_data:/var/lib/postgresql/data/
     env_file:
       - .env
+    container_name: db
 
   backend:
     image: slimpush/foodgram_backend

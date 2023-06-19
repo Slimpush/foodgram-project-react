@@ -1,6 +1,6 @@
 from django.contrib.auth import get_user_model
 from django.db.models import Sum
-from django.http.response import HttpResponse
+from django.http.response import FileResponse
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
 from djoser.views import UserViewSet
@@ -94,7 +94,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
         shopping_list = self.construct_shopping_list(user, ingredients)
 
         filename = f'{user.username}_shopping_list.txt'
-        response = HttpResponse(shopping_list, content_type='text/plain')
+        response = FileResponse(shopping_list, content_type='text/plain')
         response['Content-Disposition'] = f'attachment; filename={filename}'
 
         return response
