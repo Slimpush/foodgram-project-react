@@ -7,8 +7,8 @@ SECRET_KEY = os.getenv('SECRET_KEY', 'default_value')
 
 DEBUG = True
 # DEBUG = bool(strtobool(os.getenv('DEBUG', 'False')))
-
-ALLOWED_HOSTS = [os.getenv('ALLOWED_HOSTS', default='*')]
+ALLOWED_HOSTS = ['*']
+# ALLOWED_HOSTS = [os.getenv('ALLOWED_HOSTS', default='*')]
 
 AUTH_USER_MODEL = 'users.User'
 
