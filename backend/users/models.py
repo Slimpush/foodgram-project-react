@@ -48,23 +48,6 @@ class User(AbstractUser):
     def __str__(self):
         return f'{self.username}: {self.email}'
 
-    @classmethod
-    def normalize_email(cls, email):
-        email = email or ""
-        if "@" in email:
-            email_name, domain_part = email.strip().rsplit("@", 1)
-            return email_name.lower() + "@" + domain_part.lower()
-        return email
-
-    @staticmethod
-    def __normalize_first_last_names(self, name):
-        return name.strip().title()
-
-    def clean(self):
-        self.first_name = self.__normalize_first_last_names(self.first_name)
-        self.last_name = self.__normalize_first_last_names(self.last_name)
-        super().clean()
-
 
 class Follow(models.Model):
     author = models.ForeignKey(
