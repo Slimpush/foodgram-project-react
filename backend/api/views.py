@@ -4,7 +4,7 @@ from django.http.response import FileResponse
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
 from djoser.views import UserViewSet
-from recipes.models import (CartRecipeModel, Favorites, Ingredient, Recipe,
+from recipes.models import (CartRecipeModel, Ingredient, Recipe,
                             RecipeIngredient, Tag)
 from rest_framework import status, viewsets
 from rest_framework.decorators import action
@@ -44,55 +44,55 @@ class RecipeViewSet(viewsets.ModelViewSet):
     filter_class = RecipeFilter
     permission_classes = [IsOwnerOrReadOnly]
 
-    def perform_create(self, serializer):
-        serializer.save(author=self.request.user)
-
-    @action(detail=True, methods=['get', 'delete'],
+    @action(detail=True, methods=['get', 'post', 'delete'],
             permission_classes=[IsAuthenticated])
-    def list_action(self, request, pk=None, model=None):
-        if request.method == 'GET':
-            return self.add_to_list(model, request.user, pk)
-        if request.method == 'DELETE':
-            return self.remove_from_list(model, request.user, pk)
-        return None
-
-    @action(detail=True, methods=['get', 'delete'],
-            permission_classes=[IsAuthenticated])
-    def favorite(self, request, pk=None):
-        return self.list_action(request, pk=pk, model=Favorites)
-
-    @action(detail=True, methods=['get', 'delete'],
-            permission_classes=[IsAuthenticated])
-    def shopping_cart(self, request, pk=None):
-        return self.list_action(request, pk=pk, model=CartRecipeModel)
-
-    def construct_shopping_list(self, user, ingredients):
-        today = timezone.now().date()
-        shopping_list = (f'Список покупок для: {user.get_full_name()}\n\n'
-                         f'Дата: {today:%Y-%m-%d}\n\n')
-        shopping_list += '\n'.join([
-            f'- {ingredient.ingredient.name}'
-            f'-({ingredient.ingredient.measurement_unit})'
-            f'- {ingredient.amount}'
-            for ingredient in ingredients
-        ])
-        shopping_list += f'\n\nFoodgram ({today:%Y})'
-        return shopping_list
+    def cart(self, request, pk=None):
+        recipe = self.get_object()
+        user = request.user
+        if request.method == 'POST':
+            cart_recipe, created = CartRecipeModel.objects.get_or_create(
+                user=user, recipe=recipe
+            )
+            if not created:
+                return Response({'errors': 'Рецепт уже добавлен в корзину.'},
+                                status=status.HTTP_400_BAD_REQUEST)
+            serializer = ShortRecipeSerializer(recipe)
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        elif request.method == 'DELETE':
+            cart_recipe = get_object_or_404(
+                CartRecipeModel, user=user, recipe=recipe
+            )
+            cart_recipe.delete()
+            return Response(status=status.HTTP_204_NO_CONTENT)
+        else:
+            cart_recipes = user.shopping_cart.filter(recipe=recipe)
+            if not cart_recipes.exists():
+                return Response({'errors': 'Рецепт отсутствует в корзине.'},
+                                status=status.HTTP_404_NOT_FOUND)
+            serializer = ShortRecipeSerializer(recipe)
+            return Response(serializer.data)
 
     @action(detail=False, permission_classes=[IsAuthenticated])
-    def download_shopping_cart(self, request):
+    def shopping_cart(self, request):
         user = request.user
-        if not user.shopping_cart.exists():
-            return Response({'message': 'Shopping cart is empty.'})
-
+        cart_recipes = user.shopping_cart.select_related('recipe')
         ingredients = RecipeIngredient.objects.filter(
-            recipe__shopping_cart__user=request.user
-        ).select_related('recipe__shopping_cart__user', 'ingredient').values(
+            recipe__in=[cart.recipe for cart in cart_recipes]
+        ).select_related('ingredient').values(
             'ingredient__name',
             'ingredient__measurement_unit'
         ).annotate(amount=Sum('amount'))
 
-        shopping_list = self.construct_shopping_list(user, ingredients)
+        today = timezone.now().date()
+        shopping_list = (f'Список покупок для: {user.get_full_name()}\n\n'
+                         f'Дата: {today:%Y-%m-%d}\n\n')
+        shopping_list += '\n'.join([
+            f'- {ingredient["ingredient__name"]}'
+            f'-({ingredient["ingredient__measurement_unit"]})'
+            f'- {ingredient["amount"]}'
+            for ingredient in ingredients
+        ])
+        shopping_list += f'\n\nFoodgram ({today:%Y})'
 
         filename = f'{user.username}_shopping_list.txt'
         response = FileResponse(shopping_list, content_type='text/plain')
@@ -100,22 +100,8 @@ class RecipeViewSet(viewsets.ModelViewSet):
 
         return response
 
-    def add_to_list(self, model, user, pk):
-        recipe = get_object_or_404(Recipe, id=pk)
-        obj, created = model.objects.get_or_create(user=user, recipe=recipe)
-        if not created:
-            return Response({'errors': 'Рецепт уже добавлен в список'},
-                            status=status.HTTP_400_BAD_REQUEST)
-        serializer = ShortRecipeSerializer(recipe)
-        return Response(serializer.data, status=status.HTTP_201_CREATED)
-
-    def remove_from_list(self, model, user, pk):
-        obj = model.objects.filter(user=user, recipe__id=pk)
-        if obj.exists():
-            obj.delete()
-            return Response(status=status.HTTP_204_NO_CONTENT)
-        return Response({'errors': 'Рецепт уже удален'},
-                        status=status.HTTP_400_BAD_REQUEST)
+    def perform_create(self, serializer):
+        serializer.save(author=self.request.user)
 
 
 class UserViewSet(UserViewSet):
