@@ -58,19 +58,28 @@ class RecipeViewSet(viewsets.ModelViewSet):
                                 status=status.HTTP_400_BAD_REQUEST)
             serializer = ShortRecipeSerializer(recipe)
             return Response(serializer.data, status=status.HTTP_201_CREATED)
-        elif request.method == 'DELETE':
+
+        if request.method == 'DELETE':
             cart_recipe = get_object_or_404(
                 CartRecipeModel, user=user, recipe=recipe
             )
             cart_recipe.delete()
             return Response(status=status.HTTP_204_NO_CONTENT)
-        else:
+
+        if request.method == 'GET':
             cart_recipes = user.shopping_cart.filter(recipe=recipe)
             if not cart_recipes.exists():
-                return Response({'errors': 'Рецепт отсутствует в корзине.'},
-                                status=status.HTTP_404_NOT_FOUND)
+                return Response(
+                    {'errors': 'Рецепт отсутствует в корзине.'},
+                    status=status.HTTP_404_NOT_FOUND
+                )
             serializer = ShortRecipeSerializer(recipe)
             return Response(serializer.data)
+
+    # Если запрос не соответствует ни одному из блоков if, возвращаем ошибку
+        return Response(
+            {'errors': 'Метод не поддерживается.'},
+            status=status.HTTP_405_METHOD_NOT_ALLOWED)
 
     @action(detail=False, permission_classes=[IsAuthenticated])
     def shopping_cart(self, request):
