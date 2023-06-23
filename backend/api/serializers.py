@@ -155,6 +155,18 @@ class RecipeSerializer(ModelSerializer):
             return Recipe.objects.filter(user=request.user).exists()
         return False
 
+
+class RecipeCreateSerializer(ModelSerializer):
+    image = Base64ImageField()
+    tags = TagSerializer(read_only=True, many=True)
+    author = UserSerializer(read_only=True)
+    ingredients = RecipeIngredientSerializer(many=True,
+                                             source='ingredient_list')
+
+    class Meta:
+        model = Recipe
+        fields = '__all__'
+
     def validate(self, data):
         ingredients = self.initial_data.get('ingredients')
         ingredient_list = []

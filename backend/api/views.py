@@ -13,8 +13,9 @@ from users.models import Follow, User
 from .filters import IngredientFilter, RecipeFilter
 from .paginators import PageLimitPagination
 from .permissions import IsOwnerOrReadOnly
-from .serializers import (IngredientSerializer, RecipeSerializer,
-                          SubscribeSerializer, TagSerializer, UserSerializer)
+from .serializers import (IngredientSerializer, RecipeCreateSerializer,
+                          RecipeSerializer, SubscribeSerializer, TagSerializer,
+                          UserSerializer)
 
 User = get_user_model()
 
@@ -43,29 +44,10 @@ class RecipeViewSet(viewsets.ModelViewSet):
     def perform_create(self, serializer):
         serializer.save(author=self.request.user)
 
-    @action(
-        detail=True,
-        methods=['POST', 'DELETE'],
-        permission_classes=[IsAuthenticated],
-    )
-    def favorite(self, request, pk=None):
-        recipe = get_object_or_404(Recipe, id=pk)
-        user = request.user
-        if request.method == 'POST':
-            if not Favorites.objects.filter(user=user, recipe=recipe).exists():
-                Favorites.objects.create(user=user, recipe=recipe)
-                serializer = SubscribeSerializer(recipe)
-                return Response(serializer.data,
-                                status=status.HTTP_201_CREATED)
-            text = {'errors': 'Объект уже в списке.'}
-            return Response(text, status=status.HTTP_400_BAD_REQUEST)
-        if request.method == 'DELETE':
-            if Favorites.objects.filter(user=user, recipe=recipe).exists():
-                Favorites.objects.filter(user=user, recipe=recipe).delete()
-                return Response(status=status.HTTP_204_NO_CONTENT)
-            text = {'errors': 'Объект не в списке.'}
-            return Response(text, status=status.HTTP_400_BAD_REQUEST)
-        return Response(text, status=status.HTTP_405_METHOD_NOT_ALLOWED)
+    def get_serializer_class(self):
+        if self.request.method == 'GET':
+            return RecipeSerializer
+        return RecipeCreateSerializer
 
     def object_already_in_list(self, user, recipe, model):
         if model.objects.filter(user=user, recipe=recipe).exists():
