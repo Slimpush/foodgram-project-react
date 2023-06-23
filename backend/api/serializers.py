@@ -143,18 +143,6 @@ class RecipeSerializer(ModelSerializer):
         model = Recipe
         fields = '__all__'
 
-    def get_is_favorited(self, obj):
-        request = self.context.get('request')
-        if request and hasattr(request, 'user'):
-            return Recipe.objects.filter(user=request.user).exists()
-        return False
-
-    def get_is_in_shopping_cart(self, obj):
-        request = self.context.get('request')
-        if request and hasattr(request, 'user'):
-            return Recipe.objects.filter(user=request.user).exists()
-        return False
-
 
 class RecipeCreateSerializer(ModelSerializer):
     image = Base64ImageField()

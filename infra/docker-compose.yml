@@ -15,7 +15,7 @@ services:
     container_name: db
 
   backend:
-    image: slimpush/foodgram_backend
+    image: slimpush/foodgram_backend:latest
     volumes:
       - static_volume:/app/static/
       - media_volume:/app/media/
@@ -27,7 +27,7 @@ services:
     container_name: foodgram_backend
 
   frontend:
-    image: slimpush/foodgram_frontend
+    image: slimpush/foodgram_frontend:latest
     volumes:
       - ../frontend/:/app/result_build/
     depends_on:
