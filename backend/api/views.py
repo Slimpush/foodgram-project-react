@@ -59,7 +59,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
                                 status=status.HTTP_201_CREATED)
             text = {'errors': 'Объект уже в списке.'}
             return Response(text, status=status.HTTP_400_BAD_REQUEST)
-        elif request.method == 'DELETE':
+        if request.method == 'DELETE':
             if Favorites.objects.filter(user=user, recipe=recipe).exists():
                 Favorites.objects.filter(user=user, recipe=recipe).delete()
                 return Response(status=status.HTTP_204_NO_CONTENT)
@@ -69,7 +69,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
             text = {'errors': 'Метод обращения недопустим.'}
             return Response(text, status=status.HTTP_405_METHOD_NOT_ALLOWED)
 
-    def object_already_in_list(user, recipe, model):
+    def object_already_in_list(self, user, recipe, model):
         if model.objects.filter(user=user, recipe=recipe).exists():
             return True
         return False
@@ -89,7 +89,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
                 return Response(serializer.data, status=status.HTTP_200_OK)
             text = {'errors': 'Объект уже в списке.'}
             return Response(text, status=status.HTTP_400_BAD_REQUEST)
-        elif request.method == 'DELETE':
+        if request.method == 'DELETE':
             if self.object_already_in_list(user, recipe, Favorites):
                 Favorites.objects.filter(user=user, recipe=recipe).delete()
                 return Response(status=status.HTTP_200_OK)
@@ -114,7 +114,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
                 return Response(serializer.data, status=status.HTTP_200_OK)
             text = {'errors': 'Объект уже в списке.'}
             return Response(text, status=status.HTTP_400_BAD_REQUEST)
-        elif request.method == 'DELETE':
+        if request.method == 'DELETE':
             if self.object_already_in_list(user, recipe, CartRecipeModel):
                 CartRecipeModel.objects.filter(user=user,
                                                recipe=recipe).delete()
