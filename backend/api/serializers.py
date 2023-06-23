@@ -188,6 +188,8 @@ class RecipeSerializer(ModelSerializer):
 
     @transaction.atomic
     def create(self, validated_data):
+        if not self.is_valid():
+            raise ValidationError('Validation error')
         image = validated_data.pop('image')
         ingredients_data = validated_data.pop('ingredients')
         tags_data = self.initial_data.get('tags')
