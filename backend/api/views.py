@@ -65,6 +65,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
                 return Response(status=status.HTTP_204_NO_CONTENT)
             text = {'errors': 'Объект не в списке.'}
             return Response(text, status=status.HTTP_400_BAD_REQUEST)
+        return Response(text, status=status.HTTP_405_METHOD_NOT_ALLOWED)
 
     def object_already_in_list(self, user, recipe, model):
         if model.objects.filter(user=user, recipe=recipe).exists():
@@ -92,6 +93,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
                 return Response(status=status.HTTP_200_OK)
             text = {'errors': 'Объект не в списке.'}
             return Response(text, status=status.HTTP_400_BAD_REQUEST)
+        return Response(text, status=status.HTTP_405_METHOD_NOT_ALLOWED)
 
     @action(
         detail=True,
@@ -115,6 +117,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
                 return Response(status=status.HTTP_200_OK)
             text = {'errors': 'Объект не в списке.'}
             return Response(text, status=status.HTTP_400_BAD_REQUEST)
+        return Response(text, status=status.HTTP_405_METHOD_NOT_ALLOWED)
 
     @action(
         detail=False,
