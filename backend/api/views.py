@@ -133,6 +133,17 @@ class UserViewSet(
     serializer_class = UserSerializer
     pagination_class = PageLimitPagination
 
+    def get_instance(self):
+        return self.request.user
+
+    @action(
+        detail=False,
+        permission_classes=[IsOwnerOrReadOnly],
+    )
+    def me(self, request, *args, **kwargs):
+        self.get_object = self.get_instance
+        return self.retrieve(request, *args, **kwargs)
+
     @action(detail=True, methods=['post'],
             permission_classes=[IsAuthenticated])
     def subscribe(self, request, pk=None):
