@@ -160,10 +160,9 @@ class RecipeCreateSerializer(ModelSerializer):
         )
 
     def get_ingredients(self, recipe):
-        ingredients = recipe.ingredients.values(
+        return recipe.ingredients.values(
             "id", "name", "measurement_unit", amount=F("recipe__amount")
         )
-        return ingredients
 
     def get_user_item_relation(self, recipe, relation_type):
         user = self.context.get("view").request.user
