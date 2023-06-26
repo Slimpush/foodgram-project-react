@@ -73,7 +73,7 @@ class Follow(models.Model):
         verbose_name_plural = 'Подписки'
         constraints = [
             models.UniqueConstraint(
-                fields=('user', 'author'),
+                fields=['user', 'author'],
                 name='Нельзя повторно подписаться',
             ),
             models.CheckConstraint(

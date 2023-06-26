@@ -1,6 +1,5 @@
 from django.db import transaction
-from django.shortcuts import get_object_or_404
-from djoser.serializers import UserCreateSerializer, UserSerializer
+from django.db.models import F
 from drf_extra_fields.fields import Base64ImageField
 from recipes.models import Ingredient, Recipe, RecipeIngredient, Tag
 from rest_framework import status
@@ -11,13 +10,14 @@ from rest_framework.serializers import (ModelSerializer,
 from users.models import Follow, User
 
 
-class UserSerializer(UserSerializer):
+class UserSerializer(ModelSerializer):
     is_subscribed = SerializerMethodField(read_only=True)
 
     class Meta:
         model = User
         fields = (
             'email',
+            'id',
             'username',
             'first_name',
             'last_name',
@@ -31,16 +31,16 @@ class UserSerializer(UserSerializer):
             return False
         return Follow.objects.filter(user=user, author=obj).exists()
 
-
-class UserCreateSerializer(UserCreateSerializer):
-    model = User
-    fields = (
-        'email',
-        'username',
-        'first_name',
-        'last_name',
-        'password',
-    )
+    def create(self, validated_data):
+        user = User(
+            email=validated_data["email"],
+            username=validated_data["username"],
+            first_name=validated_data["first_name"],
+            last_name=validated_data["last_name"],
+        )
+        user.set_password(validated_data["password"])
+        user.save()
+        return user
 
 
 class ShortRecipeSerializer(ModelSerializer):
@@ -150,27 +150,53 @@ class RecipeCreateSerializer(ModelSerializer):
     author = UserSerializer(read_only=True)
     ingredients = RecipeIngredientSerializer(many=True,
                                              source='ingredient_list')
+    get_user_item_relation = SerializerMethodField()
 
     class Meta:
         model = Recipe
         fields = '__all__'
+        read_only_fields = (
+            "get_user_item_relation",
+        )
+
+    def get_ingredients(self, recipe):
+        ingredients = recipe.ingredients.values(
+            "id", "name", "measurement_unit", amount=F("recipe__amount")
+        )
+        return ingredients
+
+    def get_user_item_relation(self, recipe, relation_type):
+        user = self.context.get("view").request.user
+        if user.is_anonymous:
+            return False
+
+        relations = {
+            "favorites": user.favorites,
+            "carts": user.carts,
+        }
+
+        return relations[relation_type].filter(recipe=recipe).exists()
 
     def validate(self, data):
         ingredients = self.initial_data.get('ingredients')
-        ingredient_list = []
-        for ingredient_item in ingredients:
-            ingredient = get_object_or_404(Ingredient,
-                                           id=ingredient_item['id'])
-            if ingredient in ingredient_list:
-                raise ValidationError('Нужны уникальные ингредиенты!')
-            ingredient_list.append(ingredient)
-            if int(ingredient_item['amount']) < 0:
-                raise ValidationError({
-                    ('Количество ингредиентов должно быть больше 1')
-                })
-            if not ingredients:
+        if not ingredients:
+            raise ValidationError(
+                {'ingredients': 'Блюдо должно содержать хотя бы 1 ингредиент!'}
+            )
+
+        ingredient_ids = []
+        for ingredient in ingredients:
+            ingredient_id = ingredient['id']
+            if ingredient_id in ingredient_ids:
+                raise ValidationError('Ингредиенты не могут повторяться!')
+            ingredient_ids.append(ingredient_id)
+
+            ingredient_amount = int(ingredient['amount'])
+            if ingredient_amount < 1:
                 raise ValidationError(
-                    'Блюдо должно содержать хотя бы 1 ингредиент')
+                    {'amount': 'Количество ингредиентов должно быть больше 1!'}
+                )
+
         data['ingredients'] = ingredients
         return data
 
@@ -178,9 +204,8 @@ class RecipeCreateSerializer(ModelSerializer):
     def create_ingredients(self, ingredients, recipe):
         for ingredient in ingredients:
             ingredient_obj, _ = Ingredient.objects.get_or_create(
-                name=ingredient['name']
-            )
-            recipe.ingredients.through.objects.create(
+                name=ingredient['name'])
+            RecipeIngredient.objects.create(
                 ingredient=ingredient_obj,
                 recipe=recipe,
                 amount=ingredient['amount']
@@ -188,14 +213,15 @@ class RecipeCreateSerializer(ModelSerializer):
 
     @transaction.atomic
     def create(self, validated_data):
-        if not self.is_valid():
-            raise ValidationError('Validation error')
         image = validated_data.pop('image')
         ingredients_data = validated_data.pop('ingredients')
         tags_data = self.initial_data.get('tags')
+
         recipe = Recipe.objects.create(image=image, **validated_data)
         recipe.tags.set(tags_data)
+
         self.create_ingredients(ingredients_data, recipe)
+
         return recipe
 
     @transaction.atomic
@@ -203,15 +229,16 @@ class RecipeCreateSerializer(ModelSerializer):
         instance.name = validated_data.get('name', instance.name)
         instance.text = validated_data.get('text', instance.text)
         instance.image = validated_data.get('image', instance.image)
-        instance.tags.set(validated_data.get('tags', instance.tags.all()))
         instance.cooking_time = validated_data.get(
             'cooking_time', instance.cooking_time
         )
-        instance.save()
 
+        if 'tags' in validated_data:
+            instance.tags.set(validated_data['tags'])
         if 'ingredients' in validated_data:
-            instance.ingredients.through.objects.filter(
-                recipe=instance).delete()
+            RecipeIngredient.objects.filter(recipe=instance).delete()
             self.create_ingredients(validated_data['ingredients'], instance)
+
+        instance.save()
 
         return instance

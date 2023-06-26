@@ -12,6 +12,12 @@ class IngredientFilter(SearchFilter):
 
 
 class RecipeFilter(FilterSet):
+    name = filters.CharFilter(
+        field_name='name',
+    )
+    author = filters.CharFilter(
+        field_name='author',
+    )
     tags = filters.ModelMultipleChoiceFilter(
         field_name='tags__slug',
         to_field_name='slug',
