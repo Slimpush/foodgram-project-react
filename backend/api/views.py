@@ -59,8 +59,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
         if request.method == 'POST':
             return self.add_to(Favorites, request.user, pk,
                                FavoriteSerializer())
-        else:
-            return self.delete_from(Favorites, request.user, pk)
+        return self.delete_from(Favorites, request.user, pk)
 
     @action(
         detail=True,
@@ -71,8 +70,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
         if request.method == 'POST':
             return self.add_to(ShoppingCart, request.user, pk,
                                ShoppingListSerializer())
-        else:
-            return self.delete_from(ShoppingCart, request.user, pk)
+        return self.delete_from(ShoppingCart, request.user, pk)
 
     def add_to(self, model, user, pk, serializer):
         if model.objects.filter(user=user, recipe__id=pk).exists():
