@@ -1,14 +1,14 @@
 import os
+from distutils.util import strtobool
 from pathlib import Path
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 SECRET_KEY = os.getenv('SECRET_KEY', 'default_value')
 
-DEBUG = True
-# DEBUG = bool(strtobool(os.getenv('DEBUG', 'False')))
+DEBUG = bool(strtobool(os.getenv('DEBUG', 'False')))
+
 ALLOWED_HOSTS = ['*']
-# ALLOWED_HOSTS = [os.getenv('ALLOWED_HOSTS', default='*')]
 
 AUTH_USER_MODEL = 'users.User'
 
@@ -57,14 +57,7 @@ TEMPLATES = [
         },
     },
 ]
-'''
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
-    }
-}
-'''
+
 DATABASES = {
     'default': {
         'ENGINE': os.getenv('DB_ENGINE', default='django.db.backends.postgresql'),
@@ -136,10 +129,27 @@ MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-MAX_LEN_EMAIL_PWRD_FIELD = 150
+MAX_LEN_EMAIL_PWRD_FIELD = 254
 
 MAX_LEN_USER_CHARFIELD = 150
 
 MAX_LEN_RECIPE_FIELD = 200
 
 MAX_LEN_HEX = 7
+
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'handlers': {
+        'console': {
+            'class': 'logging.StreamHandler',
+        },
+    },
+    'loggers': {
+        'django.db.backends': {
+            'handlers': ['console', ],
+            'level': 'DEBUG',
+            'propagate': True,
+        },
+    },
+}

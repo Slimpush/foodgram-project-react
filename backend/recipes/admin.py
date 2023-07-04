@@ -1,12 +1,8 @@
 from django.contrib import admin
 from django.contrib.admin import display
 
-from .models import (CartRecipeModel, Favorites, Ingredient, Recipe,
-                     RecipeIngredient, Tag)
-
-
-class CartRecipeModelAdmin(admin.ModelAdmin):
-    list_display = ('user', 'recipe',)
+from .models import (Favorites, Ingredient, Recipe, RecipeIngredient,
+                     ShoppingCart, Tag)
 
 
 class FavoritesAdmin(admin.ModelAdmin):
@@ -39,9 +35,13 @@ class TagAdmin(admin.ModelAdmin):
     list_filter = ('name', )
 
 
-admin.site.register(CartRecipeModel, CartRecipeModelAdmin)
+class ShoppingCartAdmin(admin.ModelAdmin):
+    list_display = ('user', 'recipe')
+
+
 admin.site.register(Favorites, FavoritesAdmin)
 admin.site.register(Ingredient, IngredientAdmin)
 admin.site.register(Recipe, RecipeAdmin)
 admin.site.register(RecipeIngredient, RecipeIngredientAdmin)
 admin.site.register(Tag, TagAdmin)
+admin.site.register(ShoppingCart, ShoppingCartAdmin)

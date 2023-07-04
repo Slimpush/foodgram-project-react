@@ -53,13 +53,13 @@ class Follow(models.Model):
     author = models.ForeignKey(
         User,
         on_delete=models.CASCADE,
-        related_name='follower',
+        related_name='following',
         verbose_name=_('Автор'),
     )
     user = models.ForeignKey(
         User,
         on_delete=models.CASCADE,
-        related_name="followers",
+        related_name="follower",
         verbose_name=_('Подписчики'),
     )
     created_at = models.DateTimeField(
