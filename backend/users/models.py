@@ -1,48 +1,44 @@
 from django.conf import settings
 from django.contrib.auth.models import AbstractUser
-from django.core.validators import MinLengthValidator, RegexValidator
+from django.core.validators import RegexValidator
 from django.db import models
-from django.utils.translation import gettext_lazy as _
 
 
 class User(AbstractUser):
     email = models.EmailField(
-        _('Адрес почты'),
+        verbose_name='Адрес почты',
         max_length=settings.MAX_LEN_EMAIL_PWRD_FIELD,
         unique=True,
     )
     username = models.CharField(
-        _('Имя пользователя'),
+        verbose_name='Имя пользователя',
         max_length=settings.MAX_LEN_USER_CHARFIELD,
         unique=True,
-        validators=[MinLengthValidator
-                    (4, 'Имя пользователя слишком короткое')
-                    ],
+        validators=[
+            RegexValidator(
+                r'^(?!me\Z)^[\w.@+-]+\Z',
+                message='Использовать "me" в качестве имени запрещено.'
+            ),
+        ],
     )
+
     first_name = models.CharField(
-        _('Имя'),
+        verbose_name='Имя',
         max_length=settings.MAX_LEN_USER_CHARFIELD,
-        validators=[RegexValidator(
-            regex='^[a-zA-Zа-яА-ЯёЁ -]*$',
-            message='Поле должно содержать только буквы и пробелы.',
-        )],
     )
     last_name = models.CharField(
-        _('Фамилия'),
+        verbose_name='Фамилия',
         max_length=settings.MAX_LEN_USER_CHARFIELD,
-        validators=[RegexValidator(
-            regex='^[a-zA-Zа-яА-ЯёЁ -]*$',
-            message='Поле должно содержать только буквы и пробелы.',
-        )],
+
     )
     password = models.CharField(
-        _('Пароль'),
+        verbose_name='Пароль',
         max_length=settings.MAX_LEN_EMAIL_PWRD_FIELD,
     )
 
     class Meta:
-        verbose_name = _('Пользователь')
-        verbose_name_plural = _('Пользователи')
+        verbose_name = 'Пользователь'
+        verbose_name_plural = 'Пользователи'
         ordering = ('username',)
 
     def __str__(self):
@@ -54,18 +50,13 @@ class Follow(models.Model):
         User,
         on_delete=models.CASCADE,
         related_name='following',
-        verbose_name=_('Автор'),
+        verbose_name='Автор',
     )
     user = models.ForeignKey(
         User,
         on_delete=models.CASCADE,
-        related_name="follower",
-        verbose_name=_('Подписчики'),
-    )
-    created_at = models.DateTimeField(
-        verbose_name='Дата создания подписки',
-        auto_now_add=True,
-        editable=False
+        related_name='follower',
+        verbose_name='Подписчик',
     )
 
     class Meta:
@@ -73,7 +64,7 @@ class Follow(models.Model):
         verbose_name_plural = 'Подписки'
         constraints = [
             models.UniqueConstraint(
-                fields=['user', 'author'],
+                fields=('user', 'author'),
                 name='Нельзя повторно подписаться',
             ),
             models.CheckConstraint(

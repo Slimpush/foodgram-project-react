@@ -1,6 +1,7 @@
 from django.conf import settings
 from django.contrib.auth import get_user_model
-from django.core.validators import MinValueValidator, RegexValidator
+from django.core.validators import (MaxValueValidator, MinValueValidator,
+                                    RegexValidator)
 from django.db import models
 from django.db.models import UniqueConstraint
 
@@ -55,7 +56,7 @@ class Ingredient(models.Model):
         verbose_name = 'Ингредиент'
         verbose_name_plural = 'Ингредиенты'
         constraints = [
-            models.UniqueConstraint(fields=['name', 'measurement_unit'],
+            models.UniqueConstraint(fields=('name', 'measurement_unit'),
                                     name='unique ingredient')
         ]
 
@@ -91,12 +92,11 @@ class Recipe(models.Model):
         through='RecipeIngredient'
     )
     cooking_time = models.PositiveSmallIntegerField(
-        validators=[MinValueValidator
-                    (1, 'Блюдо не может приготовиться меньше чем за 1 минуту')]
-    )
-    pub_date = models.DateTimeField(
-        verbose_name='Дата публикации',
-        auto_now_add=True,
+        validators=[MinValueValidator(
+            1, message='Время приготовления не менее 1 минуты!'
+        ), MaxValueValidator(
+            721, message='Время приготовления не более 12 часов!'
+        )]
     )
 
     class Meta:
@@ -122,17 +122,19 @@ class RecipeIngredient(models.Model):
     )
     amount = models.PositiveSmallIntegerField(
         verbose_name='Количество ингредиентов',
-        validators=[MinValueValidator
-                    (1, 'Блюдо должно содержать хотя бы 1 ингредиент')
-                    ],
+        validators=[MinValueValidator(
+            1, 'Блюдо должно содержать хотя бы 1 ингредиент'
+        ), MaxValueValidator(
+            50, 'Рецепт слишком сложный'
+        )],
     )
 
     class Meta:
-        ordering = ('-id', )
+        ordering = ('name', )
         verbose_name = 'Ингредиент рецепта'
         verbose_name_plural = 'Ингредиенты рецепта'
         constraints = [
-            models.UniqueConstraint(fields=['ingredient', 'recipe'],
+            models.UniqueConstraint(fields=('ingredient', 'recipe'),
                                     name='unique ingredients recipe'
                                     )
         ]
@@ -158,6 +160,12 @@ class CartFavorites(models.Model):
 
     class Meta:
         abstract = True
+        constraints = [
+            UniqueConstraint(
+                fields=('user', 'recipe'),
+                name='unique_cart_favorites'
+            )
+        ]
 
     def __str__(self):
         return f'{self.user} добавил {self.recipe}'
@@ -169,12 +177,6 @@ class Favorites(CartFavorites):
         verbose_name = 'Избранное'
         verbose_name_plural = 'Избранное'
         default_related_name = 'favorites'
-        constraints = [
-            UniqueConstraint(
-                fields=['user', 'recipe'],
-                name='unique_favorites'
-            )
-        ]
 
     def __str__(self):
         return f'{self.user} добавил "{self.recipe}" в Избранное'
@@ -186,9 +188,6 @@ class ShoppingCart(CartFavorites):
         verbose_name = 'Корзина'
         verbose_name_plural = 'Корзина'
         default_related_name = 'shopping_list'
-        constraints = [
-            UniqueConstraint(
-                fields=['user', 'recipe'],
-                name='unique_shopping_cart'
-            )
-        ]
+
+    def __str__(self):
+        return f'{self.user} добавил "{self.recipe}" в Корзину'

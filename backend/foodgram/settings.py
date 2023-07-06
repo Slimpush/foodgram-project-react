@@ -1,15 +1,18 @@
 import os
+from distutils.util import strtobool
 from pathlib import Path
+
+from dotenv import load_dotenv
+
+load_dotenv()
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-SECRET_KEY = os.getenv('SECRET_KEY', 'default_value')
+SECRET_KEY = os.getenv('SECRET_KEY')
 
-# DEBUG = bool(strtobool(os.getenv('DEBUG', 'False')))
+DEBUG = bool(strtobool(os.getenv('DEBUG', 'False')))
 
-DEBUG = True
-
-ALLOWED_HOSTS = ['*']
+ALLOWED_HOSTS = [os.getenv('ALLOWED_HOSTS', default='*')]
 
 AUTH_USER_MODEL = 'users.User'
 
@@ -113,7 +116,8 @@ DJOSER = {
 
 LANGUAGE_CODE = 'ru-ru'
 
-TIME_ZONE = 'UTC'
+USE_TZ = True
+TIME_ZONE = 'Asia/Novosibirsk'
 
 USE_I18N = True
 
