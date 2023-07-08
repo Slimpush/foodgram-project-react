@@ -52,11 +52,10 @@ class RecipeViewSet(viewsets.ModelViewSet):
         if operation_type == 'favorite':
             return self.process_request(Favorites, request.user, pk,
                                         FavoriteSerializer())
-        else:
-            return self.process_request(ShoppingCart, request.user, pk,
-                                        ShoppingListSerializer())
+        return self.process_request(ShoppingCart, request.user, pk,
+                                    ShoppingListSerializer())
 
-    def process_request(request, model, user, pk, serializer):
+    def process_request(self, request, model, user, pk, serializer):
         if request.method == 'DELETE':
             get_object_or_404(model, user=user, recipe__id=pk).delete()
             return Response(status=status.HTTP_204_NO_CONTENT)

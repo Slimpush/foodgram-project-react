@@ -151,7 +151,7 @@ class RecipeCreateSerializer(ModelSerializer):
             'cooking_time',
         )
 
-    def validate(self, data):
+    def validate_ingridients(self, data):
         ingredients = self.initial_data.get('ingredients')
         ingredients_data = []
         for ingredient_item in ingredients:
