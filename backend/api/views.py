@@ -1,3 +1,4 @@
+from django.db.models import F
 from django.shortcuts import get_object_or_404
 from djoser.views import UserViewSet
 from rest_framework import status, viewsets
@@ -8,7 +9,6 @@ from rest_framework.response import Response
 from recipes.models import (Favorites, Ingredient, Recipe, RecipeIngredient,
                             ShoppingCart, Tag)
 from users.models import Follow, User
-
 from .filters import IngredientFilter, RecipeFilter
 from .paginators import PageLimitPagination
 from .permissions import IsOwnerOrReadOnly
@@ -57,15 +57,13 @@ class RecipeViewSet(viewsets.ModelViewSet):
                                         ShoppingListSerializer())
 
     def process_request(request, model, user, pk, serializer):
-        if request.method == 'POST':
-            serializer.is_valid(raise_exception=True)
-            recipe = get_object_or_404(Recipe, id=pk)
-            serializer.save(user=user, recipe=recipe)
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
-
-        elif request.method == 'DELETE':
+        if request.method == 'DELETE':
             get_object_or_404(model, user=user, recipe__id=pk).delete()
             return Response(status=status.HTTP_204_NO_CONTENT)
+        serializer.is_valid(raise_exception=True)
+        recipe = get_object_or_404(Recipe, id=pk)
+        serializer.save(user=user, recipe=recipe)
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
 
     @action(
         detail=False,
@@ -74,19 +72,22 @@ class RecipeViewSet(viewsets.ModelViewSet):
     )
     def download_shopping_cart(self, request):
         user = request.user
-        purchases = ShoppingCart.objects.filter(user=user)
         file_name = f'{user.username}_shopping_list.txt'
-        shopping_list = 'Список покупок:\n'
+        shopping_list = 'Список покупок:'
 
-        recipe_ids = purchases.values_list('recipe__id', flat=True)
         ingredients = RecipeIngredient.objects.filter(
-            recipe__id__in=recipe_ids).select_related('ingredient')
-
-        for r in ingredients:
-            i = r.ingredient
-            line = f'{i.name} ({i.measurement_unit}) - {r.amount}'
-            shopping_list += f'- {line}\n'
-
+            recipe__shoppingcart__user=user
+        ).values(
+            'ingredient__name', 'ingredient__measurement_unit'
+        ).annotate(
+            amount=F('amount')
+        )
+        shopping_list += '\n'.join([
+            f"{ingredient['ingredient__name']} "
+            f"({ingredient['ingredient__measurement_unit']}) - "
+            f"{ingredient['amount']}"
+            for ingredient in ingredients
+        ])
         response = Response(shopping_list, content_type='text/plain')
         response['Content-Disposition'] = f'attachment; filename={file_name}'
         return response
@@ -96,9 +97,6 @@ class CustomUserViewSet(UserViewSet):
     queryset = User.objects.all()
     serializer_class = UserSerializer
     pagination_class = PageLimitPagination
-
-    def get_instance(self):
-        return self.request.user
 
     @action(detail=True, methods=['post'],
             permission_classes=[IsAuthenticated])

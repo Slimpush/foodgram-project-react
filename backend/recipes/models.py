@@ -7,6 +7,11 @@ from django.db.models import UniqueConstraint
 
 User = get_user_model()
 
+MIN_COOKING_TIME = 1
+MAX_COOKING_TIME = 721
+MIN_INGREDIENT_AMOUNT = 1
+MAX_INGREDIENT_AMOUNT = 50
+
 
 class Tag(models.Model):
     name = models.CharField(
@@ -93,14 +98,16 @@ class Recipe(models.Model):
     )
     cooking_time = models.PositiveSmallIntegerField(
         validators=[MinValueValidator(
-            1, message='Время приготовления не менее 1 минуты!'
+            MIN_COOKING_TIME,
+            message='Время приготовления не менее 1 минуты!'
         ), MaxValueValidator(
-            721, message='Время приготовления не более 12 часов!'
+            MAX_COOKING_TIME,
+            message='Время приготовления не более 12 часов!'
         )]
     )
 
     class Meta:
-        ordering = ('-pub_date',)
+        ordering = ('-id',)
         verbose_name = 'Рецепт'
         verbose_name_plural = 'Рецепты'
 
@@ -123,9 +130,11 @@ class RecipeIngredient(models.Model):
     amount = models.PositiveSmallIntegerField(
         verbose_name='Количество ингредиентов',
         validators=[MinValueValidator(
-            1, 'Блюдо должно содержать хотя бы 1 ингредиент'
+            MIN_INGREDIENT_AMOUNT,
+            'Блюдо должно содержать хотя бы 1 ингредиент'
         ), MaxValueValidator(
-            50, 'Рецепт слишком сложный'
+            MAX_INGREDIENT_AMOUNT,
+            'Рецепт слишком сложный'
         )],
     )
 
@@ -163,12 +172,16 @@ class CartFavorites(models.Model):
         constraints = [
             UniqueConstraint(
                 fields=('user', 'recipe'),
-                name='unique_cart_favorites'
+                name='%(class)s_unique_cart_favorites'
             )
         ]
 
     def __str__(self):
-        return f'{self.user} добавил {self.recipe}'
+        return f'{self.user} добавил {self.recipe} в {self._meta.verbose_name}'
+
+    def __init_subclass__(cls, **kwargs):
+        super().__init_subclass__(**kwargs)
+        cls.Meta.default_related_name = cls.__name__.lower()
 
 
 class Favorites(CartFavorites):
@@ -176,10 +189,6 @@ class Favorites(CartFavorites):
     class Meta(CartFavorites.Meta):
         verbose_name = 'Избранное'
         verbose_name_plural = 'Избранное'
-        default_related_name = 'favorites'
-
-    def __str__(self):
-        return f'{self.user} добавил "{self.recipe}" в Избранное'
 
 
 class ShoppingCart(CartFavorites):
@@ -187,7 +196,3 @@ class ShoppingCart(CartFavorites):
     class Meta(CartFavorites.Meta):
         verbose_name = 'Корзина'
         verbose_name_plural = 'Корзина'
-        default_related_name = 'shopping_list'
-
-    def __str__(self):
-        return f'{self.user} добавил "{self.recipe}" в Корзину'
