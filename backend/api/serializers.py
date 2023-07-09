@@ -92,9 +92,6 @@ class RecipeIngredientSerializer(ModelSerializer):
             'amount',
         )
 
-    def get_amount(self, obj):
-        return obj.amount
-
 
 class RecipeSerializer(ModelSerializer):
     image = Base64ImageField()
@@ -151,21 +148,17 @@ class RecipeCreateSerializer(ModelSerializer):
             'cooking_time',
         )
 
-    def validate_ingridients(self, data):
-        ingredients = self.initial_data.get('ingredients')
-        ingredients_data = []
-        for ingredient_item in ingredients:
-            ingredient_id = ingredient_item['id']
-            if ingredient_id in [ingredient.id for
-                                 ingredient in ingredients_data]:
-                raise ValidationError('Нужны уникальные ингредиенты!')
-            ingredients_data.append(ingredient_id)
-        if not ingredients_data:
+    def validate_ingridients(self, ingredients):
+        if not ingredients:
             raise ValidationError(
                 'Блюдо должно содержать хотя бы 1 ингредиент'
             )
-        data['ingredients'] = ingredients
-        return data
+        ingredient_ids = set()
+        for ingredient in ingredients:
+            if ingredient['id'] in ingredient_ids:
+                raise ValidationError('Нужны уникальные ингредиенты!')
+            ingredient_ids.append(ingredient['id'])
+        return ingredients
 
     @staticmethod
     def create_ingredients(instance, ingredients_data):

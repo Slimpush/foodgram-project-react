@@ -1,14 +1,8 @@
-import re
-
 from django.conf import settings
 from django.contrib.auth.models import AbstractUser
-from django.core.exceptions import ValidationError
-from django.core.validators import RegexValidator
 from django.db import models
 
-REGEX_NAME = r'^(?!{0}\Z)^[\w.@+-]+\Z'
-REGEX_SYMBOLS = r'[^a-zA-Z0-9.@+-]'
-INVALID_NAMES = ['me', 'admin', 'root']
+from api.validators import validate_username
 
 
 class User(AbstractUser):
@@ -21,12 +15,7 @@ class User(AbstractUser):
         verbose_name='Имя пользователя',
         max_length=settings.MAX_LEN_USER_CHARFIELD,
         unique=True,
-        validators=[
-            RegexValidator(
-                regex=REGEX_NAME.format('|'.join(INVALID_NAMES)),
-                message='Использовать "{value}" в качестве имени запрещено.',
-            ),
-        ],
+        validators=[validate_username],
     )
 
     first_name = models.CharField(
@@ -47,15 +36,6 @@ class User(AbstractUser):
         verbose_name = 'Пользователь'
         verbose_name_plural = 'Пользователи'
         ordering = ('username',)
-
-    def clean(self):
-        super().clean()
-        invalid_symbols = re.findall(REGEX_SYMBOLS, self.username)
-        if invalid_symbols:
-            raise ValidationError(
-                f'Недопустимые символы в имени пользователя: '
-                f'{", ".join(invalid_symbols)}'
-            )
 
     def __str__(self):
         return f'{self.username}: {self.email}'

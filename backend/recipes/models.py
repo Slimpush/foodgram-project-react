@@ -7,11 +7,6 @@ from django.db.models import UniqueConstraint
 
 User = get_user_model()
 
-MIN_COOKING_TIME = 1
-MAX_COOKING_TIME = 721
-MIN_INGREDIENT_AMOUNT = 1
-MAX_INGREDIENT_AMOUNT = 50
-
 
 class Tag(models.Model):
     name = models.CharField(
@@ -98,16 +93,16 @@ class Recipe(models.Model):
     )
     cooking_time = models.PositiveSmallIntegerField(
         validators=[MinValueValidator(
-            MIN_COOKING_TIME,
+            settings.MIN_COOKING_TIME,
             message='Время приготовления не менее 1 минуты!'
         ), MaxValueValidator(
-            MAX_COOKING_TIME,
+            settings.MAX_COOKING_TIME,
             message='Время приготовления не более 12 часов!'
         )]
     )
 
     class Meta:
-        ordering = ('-id',)
+        ordering = ('name',)
         verbose_name = 'Рецепт'
         verbose_name_plural = 'Рецепты'
 
@@ -130,10 +125,10 @@ class RecipeIngredient(models.Model):
     amount = models.PositiveSmallIntegerField(
         verbose_name='Количество ингредиентов',
         validators=[MinValueValidator(
-            MIN_INGREDIENT_AMOUNT,
+            settings.MIN_INGREDIENT_AMOUNT,
             'Блюдо должно содержать хотя бы 1 ингредиент'
         ), MaxValueValidator(
-            MAX_INGREDIENT_AMOUNT,
+            settings.MAX_INGREDIENT_AMOUNT,
             'Рецепт слишком сложный'
         )],
     )
@@ -169,6 +164,7 @@ class CartFavorites(models.Model):
 
     class Meta:
         abstract = True
+        default_related_name = '%(class)s'.lower()
         constraints = [
             UniqueConstraint(
                 fields=('user', 'recipe'),
@@ -178,10 +174,6 @@ class CartFavorites(models.Model):
 
     def __str__(self):
         return f'{self.user} добавил {self.recipe} в {self._meta.verbose_name}'
-
-    def __init_subclass__(cls, **kwargs):
-        super().__init_subclass__(**kwargs)
-        cls.Meta.default_related_name = cls.__name__.lower()
 
 
 class Favorites(CartFavorites):

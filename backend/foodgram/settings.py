@@ -135,26 +135,12 @@ MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 MAX_LEN_EMAIL_PWRD_FIELD = 254
-
 MAX_LEN_USER_CHARFIELD = 150
-
 MAX_LEN_RECIPE_FIELD = 200
-
 MAX_LEN_HEX = 7
-
-LOGGING = {
-    'version': 1,
-    'disable_existing_loggers': False,
-    'handlers': {
-        'console': {
-            'class': 'logging.StreamHandler',
-        },
-    },
-    'loggers': {
-        'django.db.backends': {
-            'handlers': ['console', ],
-            'level': 'DEBUG',
-            'propagate': True,
-        },
-    },
-}
+MIN_COOKING_TIME = 1
+MAX_COOKING_TIME = 721
+MIN_INGREDIENT_AMOUNT = 1
+MAX_INGREDIENT_AMOUNT = 50
+REGEX_USERNAME = r'[\w]'
+INVALID_NAMES = ['me', 'admin', 'root']
