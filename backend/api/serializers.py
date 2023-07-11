@@ -26,7 +26,7 @@ class UserSerializer(ModelSerializer):
 
     def get_is_subscribed(self, obj):
         user = self.context.get('request').user
-        return user.follower.filter(author=obj).exists()
+        return obj.follower.filter(user=user).exists()
 
 
 class ShortRecipeSerializer(ModelSerializer):
