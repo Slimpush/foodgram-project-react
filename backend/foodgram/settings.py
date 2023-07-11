@@ -13,7 +13,6 @@ DEBUG = bool(strtobool(os.getenv('DEBUG', 'True')))
 if DEBUG:
     SECRET_KEY = 'default_value'
 else:
-    load_dotenv()
     SECRET_KEY = os.getenv('SECRET_KEY')
 
 ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS', '').split(',')
