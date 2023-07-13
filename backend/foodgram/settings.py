@@ -113,7 +113,7 @@ DJOSER = {
     'SERIALIZERS': {
         'user': 'api.serializers.UserSerializer',
         'current_user': 'api.serializers.UserSerializer',
-        'user_create': 'api.serializers.UserSerializer',
+        'user_create': 'api.serializers.UserCreateSerializer',
     },
 }
 
@@ -145,5 +145,5 @@ MIN_COOKING_TIME = 1
 MAX_COOKING_TIME = 721
 MIN_INGREDIENT_AMOUNT = 1
 MAX_INGREDIENT_AMOUNT = 50
-REGEX_USERNAME = r'[\w]'
+REGEX_USERNAME = r'[\W]'
 INVALID_NAMES = ['me', 'admin', 'root']
