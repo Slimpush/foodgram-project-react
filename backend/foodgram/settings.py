@@ -8,12 +8,9 @@ load_dotenv()
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-DEBUG = bool(strtobool(os.getenv('DEBUG', 'True')))
+SECRET_KEY = os.getenv('SECRET_KEY')
 
-if DEBUG:
-    SECRET_KEY = 'default_value'
-else:
-    SECRET_KEY = os.getenv('SECRET_KEY')
+DEBUG = bool(strtobool(os.getenv('DEBUG', 'False')))
 
 ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS', '').split(',')
 
@@ -67,7 +64,7 @@ TEMPLATES = [
 
 DATABASES = {
     'default': {
-        'ENGINE': os.getenv('DB_ENGINE', default='django.db.backends.postgresql'),
+        'ENGINE': 'django.db.backends.postgresql',
         'NAME': os.getenv('DB_NAME', default='postgres'),
         'USER': os.getenv('POSTGRES_USER', default='postgres'),
         'PASSWORD': os.getenv('POSTGRES_PASSWORD', default='postgres'),

@@ -46,4 +46,5 @@ services:
       - media_volume:/var/html/media/
     depends_on:
       - backend
+      - frontend
     container_name: foodgram_nginx
