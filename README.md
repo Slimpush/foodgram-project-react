@@ -22,21 +22,10 @@
 * Обновите список доступных пакетов и скачайте curl: 
 ```
 sudo apt update
-sudo apt install curl
 ```
-* Проверьте, есль ли на вашем сервере Git и склонируйте репозиторий:
+* Из репозитория по адресу https://github.com/Slimpush/foodgram-project-react/infra скопируйте себе файлы nginx.conf и docker-compose.yml
+* Скачайте и установите себе Docker по инструкции с оффициального и проверьте что Docker работает:
 ```
-git --version 
-git clone git@github.com:Slimpush/foodgram-project-react.git
-```
-* С помощью curl скачайте скрипт для установки docker с оффициального сайте и запустите:
-```
-curl -fSL https://get.docker.com -o get-docker.sh 
-sudo sh ./get-docker.sh
-```
-* Установите docker-compose на сервер и проверьте что Docker работает:
-```
-sudo apt-get install docker-compose-plugin 
 sudo systemctl status docker 
 ```
 * Локально отредактируйте файл infra/nginx.conf и в строке server_name впишите IP
@@ -56,37 +45,7 @@ scp nginx.conf <username>@<host>:/home/<username>/nginx.conf
     DB_HOST=<db>
     DB_PORT=<5432>
     ```
-* Для работы с Workflow добавьте в Secrets на GitHub переменные окружения для работы:
-    ```
-    DB_ENGINE=<django.db.backends.postgresql>
-    DB_NAME=<имя базы данных postgres>
-    DB_USER=<пользователь бд>
-    DB_PASSWORD=<пароль>
-    DB_HOST=<db>
-    DB_PORT=<5432>
-    
-    DOCKER_PASSWORD=<пароль от DockerHub>
-    DOCKER_USERNAME=<имя пользователя>
 
-    USER=<username для подключения к серверу>
-    HOST=<IP сервера>
-    PASSPHRASE=<пароль для сервера, если он установлен>
-    SSH_KEY=<ваш SSH ключ>
-
-    TELEGRAM_TO=<ID чата, в который придет сообщение> (c помощью userinfobot)
-    TELEGRAM_TOKEN=<токен вашего бота> (с помощью BotFather)
-
-    Так же можно опционально скрыть эти опции из settings:
-    ALLOWED_HOSTS=<ваш_ip>,<127.0.0.1>,<localhost>,<ваш_домен>
-    DEBUG=<True/False>
-    SECRET_KEY=<секретный ключ проекта django>
-    ```
-    Проверьте код на соотетствие PEP8 и сделайте Workflow, 
-    если всё пройдет удачно - вы получите уведомление в telegram.
-    Если что-то не заработает - откройте логи в actions и посмотрите
-    в чем причина.
-    
-  
 * На сервере соберите docker-compose:
 ```
 sudo docker-compose up -d --build
